@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kamoši | Server Status</title>
+    <!-- Google Fonts pro moderní vzhled -->
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4CAF50;
+            --secondary: #2E7D32;
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Lexend', sans-serif;
+            background: radial-gradient(circle at top right, #1e293b, #0f172a);
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Animované kostičky na pozadí */
+        .bg-animate {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .square {
+            position: absolute;
+            background: rgba(76, 175, 80, 0.05);
+            border: 1px solid rgba(76, 175, 80, 0.1);
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(-20vh) rotate(360deg); opacity: 0; }
+        }
+
+        .container {
+            width: 90%;
+            max-width: 450px;
+            perspective: 1000px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin: 0 0 10px 0;
+            background: linear-gradient(to right, #4CAF50, #81C784);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .ip-box {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            border-radius: 12px;
+            margin: 20px 0;
+            cursor: pointer;
+            border: 1px dashed rgba(76, 175, 80, 0.5);
+            transition: all 0.2s;
+        }
+
+        .ip-box:active {
+            transform: scale(0.95);
+        }
+
+        code {
+            color: #81C784;
+            font-size: 1.1rem;
+        }
+
+        #status-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .dot {
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .online-dot { background-color: #4CAF50; box-shadow: 0 0 15px #4CAF50; }
+        .offline-dot { background-color: #f44336; box-shadow: 0 0 15px #f44336; }
+
+        .players-count {
+            margin-top: 15px;
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        .refresh-text {
+            font-size: 0.7rem;
+            color: #475569;
+            margin-top: 30px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-animate" id="bg"></div>
+
+    <div class="container">
+        <div class="card">
+            <h1>Kamoši</h1>
+            <p style="color: #94a3b8;">Oficiální Minecraft Server</p>
+            
+            <div class="ip-box" onclick="copyIP()">
+                <code>comes-advances.gl.joinmc.link</code>
+                <div style="font-size: 0.7rem; margin-top: 5px; color: #4CAF50;">Klikni pro zkopírování IP</div>
+            </div>
+
+            <div id="status-content">
+                <div id="status-indicator">Zjišťuji stav...</div>
+            </div>
+
+            <div class="refresh-text">Aktualizace každých 30 sekund</div>
+        </div>
+    </div>
+
+    <script>
+        // Vytvoření kostiček na pozadí
+        const bg = document.getElementById('bg');
+        for (let i = 0; i < 15; i++) {
+            const square = document.createElement('div');
+            square.className = 'square';
+            const size = Math.random() * 50 + 20 + 'px';
+            square.style.width = size;
+            square.style.height = size;
+            square.style.left = Math.random() * 100 + 'vw';
+            square.style.animationDelay = Math.random() * 20 + 's';
+            bg.appendChild(square);
+        }
+
+        function copyIP() {
+            navigator.clipboard.writeText('comes-advances.gl.joinmc.link');
+            alert('IP adresa zkopírována!');
+        }
+
+        async function checkServer() {
+            try {
+                const res = await fetch('https://api.mcsrvstat.us/2/comes-advances.gl.joinmc.link');
+                const data = await res.json();
+                const indicator = document.getElementById('status-indicator');
+                const content = document.getElementById('status-content');
+
+                if (data.online) {
+                    indicator.innerHTML = '<span class="dot online-dot"></span> ONLINE';
+                    indicator.style.color = '#4CAF50';
+                    content.innerHTML = `
+                        <div id="status-indicator">${indicator.innerHTML}</div>
+                        <div class="players-count">Hráči online: <strong>${data.players.online} / ${data.players.max}</strong></div>
+                    `;
+                } else {
+                    indicator.innerHTML = '<span class="dot offline-dot"></span> OFFLINE';
+                    indicator.style.color = '#f44336';
+                    content.innerHTML = `
+                        <div id="status-indicator">${indicator.innerHTML}</div>
+                        <div class="players-count">Server momentálně odpočívá.</div>
+                    `;
+                }
+            } catch (e) {
+                document.getElementById('status-indicator').innerHTML = 'Chyba připojení';
+            }
+        }
+
+        checkServer();
+        setInterval(checkServer, 30000);
+    </script>
+</body>
+</html>
