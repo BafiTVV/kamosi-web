@@ -1,10 +1,5 @@
-[
-    {
-        "Player":  "Bafi",
-        "Smrti":  "8"
-    },
-    {
-        "Player":  "Bafi",
-        "Smrti":  "9"
-    }
-]
+{
+    "Player":  "Bafi",
+    "Smrti":  "9",
+    "Killy":  "15"
+}
